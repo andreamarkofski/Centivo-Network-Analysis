@@ -374,7 +374,7 @@ function switchInView(view, el) {
 
 function renderInView() {
   var total = sumCounts(inRows);
-  document.getElementById('inMeta').textContent = total + ' in-network employee' + (total !== 1 ? 's' : '') + ' across ' + inRows.length + ' unique ZIP' + (inRows.length !== 1 ? 's' : '');
+  document.getElementById('inMeta').textContent = total + ' in-network employee' + (total !== 1 ? 's' : '');
   if (!inRows.length) {
     document.getElementById('inContent').innerHTML = emptyState('No in-network ZIPs found in your input.');
     return;
@@ -408,7 +408,7 @@ function renderOutView() {
   outDiv.style.display = 'block';
   outDivider.style.display = 'flex';
   var total = sumCounts(outRows);
-  document.getElementById('outMeta').textContent = total + ' out-of-network employee' + (total !== 1 ? 's' : '') + ' across ' + outRows.length + ' unique ZIP' + (outRows.length !== 1 ? 's' : '');
+  document.getElementById('outMeta').textContent = total + ' out-of-network employee' + (total !== 1 ? 's' : '');
   if (currentOutView === 'zip') renderZipTable('outContent', outRows, false);
   else if (currentOutView === 'state') renderStateTable('outContent', outRows, false);
   else if (currentOutView === 'state-msa') renderTreeView('outContent', outRows, 'msa', false);
@@ -442,12 +442,12 @@ function renderStateTable(targetId, rows, isIn) {
   var groups = groupBy(rows, 'state');
   var keys = Object.keys(groups).sort();
   var countColor = isIn ? '#1A7A40' : '#7A2010';
-  var html = '<table><thead><tr><th>State</th><th>Employees</th><th>Unique ZIPs</th></tr></thead><tbody>';
+  var html = '<table><thead><tr><th>State</th><th>Employees</th></tr></thead><tbody>';
   for (var i = 0; i < keys.length; i++) {
     var k = keys[i] || 'Unknown';
     var g = groups[keys[i]];
     var emp = sumCounts(g);
-    html += '<tr><td><strong>' + k + '</strong></td><td style="color:' + countColor + ';font-weight:700">' + emp + '</td><td>' + g.length + '</td></tr>';
+    html += '<tr><td><strong>' + k + '</strong></td><td style="color:' + countColor + ';font-weight:700">' + emp + '</td></tr>';
   }
   document.getElementById(targetId).innerHTML = html + '</tbody></table>';
 }
@@ -475,7 +475,6 @@ function renderTreeView(targetId, rows, subField, isIn) {
     html += '<div class="tree-state-header" onclick="toggleTree(\'' + stateId + '\')">';
     html += '<div class="tree-state-name"><span class="tree-state-arrow" id="arr_' + stateId + '">&#9654;</span>' + state + '</div>';
     html += '<div class="tree-state-stats">';
-    html += '<span>' + stateZips + ' ZIP' + (stateZips !== 1 ? 's' : '') + '</span>';
     html += '<span class="' + (isIn ? 'in' : 'out') + '">' + stateEmp + ' emp</span>';
     html += '</div></div>';
 
@@ -488,7 +487,7 @@ function renderTreeView(targetId, rows, subField, isIn) {
       var subRows = subGroups[subKeys[j]];
       var subEmp = sumCounts(subRows);
       html += '<div class="tree-row"><span class="tree-row-name">' + subKey + '</span>';
-      html += '<span class="tree-row-count ' + (isIn ? '' : 'out') + '">' + subEmp + ' emp &middot; ' + subRows.length + ' ZIP' + (subRows.length !== 1 ? 's' : '') + '</span></div>';
+      html += '<span class="tree-row-count ' + (isIn ? '' : 'out') + '">' + subEmp + ' emp</span></div>';
     }
     html += '</div></div></div>';
   }
