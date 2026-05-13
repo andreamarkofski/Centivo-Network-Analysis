@@ -254,6 +254,10 @@ function analyze() {
   var zips = Object.keys(zipCounts);
   if (!zips.length) { setMsg('No valid 5-digit ZIP codes found.', 'error'); return; }
 
+  // totalPasted = sum of all counts (includes duplicates)
+  var totalPasted = 0;
+  for (var k = 0; k < zips.length; k++) totalPasted += zipCounts[zips[k]];
+
   for (var j = 0; j < zips.length; j++) {
     var z = zips[j];
     var cnt = zipCounts[z];
@@ -295,8 +299,8 @@ function analyze() {
   var totalOut = sumCounts(_out);
   var total = totalIn + totalOut;
 
-  setMsg('Analysis complete: ' + total + ' total ZIPs (' + zips.length + ' unique).', 'success');
-  renderSummary(total, zips.length, totalIn, totalOut);
+  setMsg('Analysis complete: ' + totalPasted + ' total employees across ' + zips.length + ' unique ZIP' + (zips.length !== 1 ? 's' : '') + '.', 'success');
+  renderSummary(totalPasted, zips.length, totalIn, totalOut);
   document.getElementById('resultsSection').style.display = 'block';
 
   // Reset view tabs
@@ -417,11 +421,19 @@ function renderZipTable(targetId, rows, isIn) {
   var statusLabel = isIn
     ? '<span class="status-in">&#10003; In Network</span>'
     : '<span class="status-out">&#10007; Out of Network</span>';
-  var html = '<table><thead><tr><th>ZIP</th><th>City</th><th>State</th><th>County</th><th>MSA</th><th>Employees</th><th>Status</th></tr></thead><tbody>';
-  var sorted = rows.slice().sort(function(a, b) { return b.count - a.count || a.zip.localeCompare(b.zip); });
-  for (var i = 0; i < sorted.length; i++) {
-    var r = sorted[i];
-    html += '<tr><td><strong>' + r.zip + '</strong></td><td>' + (r.city||'') + '</td><td>' + (r.state||'') + '</td><td>' + (r.county||'') + '</td><td>' + (r.msa||'') + '</td><td><strong>' + r.count + '</strong></td><td>' + statusLabel + '</td></tr>';
+  var html = '<table><thead><tr><th>#</th><th>ZIP</th><th>City</th><th>State</th><th>County</th><th>MSA</th><th>Status</th></tr></thead><tbody>';
+  // Expand: one row per employee (including duplicates)
+  var expanded = [];
+  for (var i = 0; i < rows.length; i++) {
+    for (var c = 0; c < rows[i].count; c++) {
+      expanded.push(rows[i]);
+    }
+  }
+  // Sort by state then zip
+  expanded.sort(function(a, b) { return (a.state||'').localeCompare(b.state||'') || a.zip.localeCompare(b.zip); });
+  for (var i = 0; i < expanded.length; i++) {
+    var r = expanded[i];
+    html += '<tr><td style="color:var(--gray);font-size:11px">' + (i+1) + '</td><td><strong>' + r.zip + '</strong></td><td>' + (r.city||'') + '</td><td>' + (r.state||'') + '</td><td>' + (r.county||'') + '</td><td>' + (r.msa||'') + '</td><td>' + statusLabel + '</td></tr>';
   }
   document.getElementById(targetId).innerHTML = html + '</tbody></table>';
 }
@@ -526,11 +538,18 @@ function emptyState(msg) {
 function exportCSV(type) {
   var rows = type === 'in' ? inRows : outRows;
   var status = type === 'in' ? 'In Network' : 'Out of Network';
-  var lines = ['ZIP,City,State,County,MSA,Employees,Status'];
-  var sorted = rows.slice().sort(function(a, b) { return (a.state||'').localeCompare(b.state||'') || b.count - a.count; });
-  for (var i = 0; i < sorted.length; i++) {
-    var r = sorted[i];
-    lines.push([r.zip, '"'+(r.city||'')+'"', r.state||'', '"'+(r.county||'')+'"', '"'+(r.msa||'')+'"', r.count, status].join(','));
+  var lines = ['ZIP,City,State,County,MSA,Status'];
+  // Expand duplicates — one row per employee
+  var expanded = [];
+  for (var i = 0; i < rows.length; i++) {
+    for (var c = 0; c < rows[i].count; c++) {
+      expanded.push(rows[i]);
+    }
+  }
+  expanded.sort(function(a, b) { return (a.state||'').localeCompare(b.state||'') || a.zip.localeCompare(b.zip); });
+  for (var i = 0; i < expanded.length; i++) {
+    var r = expanded[i];
+    lines.push([r.zip, '"'+(r.city||'')+'"', r.state||'', '"'+(r.county||'')+'"', '"'+(r.msa||'')+'"', status].join(','));
   }
   var blob = new Blob([lines.join('\n')], { type: 'text/csv' });
   var a = document.createElement('a');
