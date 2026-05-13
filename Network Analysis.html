@@ -350,7 +350,6 @@ function renderSummary(total, unique, totalIn, totalOut) {
   var pct = total ? Math.round(100 * totalIn / total) : 0;
   var html = '';
   html += card('#1A3C34', 'white', total, 'Total Employees (ZIPs)');
-  html += card('#1A3C34', 'white', unique, 'Unique ZIP Codes');
   html += card('#1A7A40', 'white', totalIn, 'In-Network Employees');
   html += card('#D9FEBA', '#1A3C34', pct + '%', 'In-Network Coverage');
   if (totalOut > 0) {
